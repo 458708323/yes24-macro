@@ -7,49 +7,49 @@ from selenium.common.exceptions import TimeoutException
 import time
 import datetime
 
-print("크롬 프로필 경로를 입력하세요. 크롬에 chrome://version을 주소창에 입력해 확인 가능합니다.")
-print("예시: C:\\Users\\umjunsik\\AppData\\Local\\Google\\Chrome\\User Data\\")
+print("输入您的 Chrome 配置文件路径。您可以在 Chrome 地址栏中输入 chrome://version 来查看。")
+print("例如：/Users/zhaohui/Library/Application Support/Google/Chrome/Default")
 chromeDirec = input()
 
-print("예약할 사이트 주소를 입력하세요.")
-print("예시: http://ticket.yes24.com/Special/42452")
+print("请输入您想要预订的站点地址。")
+print("例如: http://ticket.yes24.com/Special/42452")
 targetUrl = input()
 
-print("좌석 등급 우선순위를 정확히 입력하세요.")
-print("예시: R석 E석 A석")
+print("请输入正确的座位等级优先级。")
+print("例如：R 座位、E 座位、A 座位")
 targetSeats = input().split(" ")
 
-print("예약 날짜를 입력하세요.")
-print("예시(10일 또는 11일): 10 11")
+print("请输入您的预订日期。")
+print("例如（第 10 或第 11 个）：10 11")
 bookingDate = input().split(" ")
 
-print("예약 시간을 입력하세요.")
-print("예시: 18 05")
+print("请输入您的预订时间。")
+print("例如: 18 05")
 bookingTime = input().split(" ")
 bookingTime = int(bookingTime[0]) * 3600 + int(bookingTime[1]) * 60
 
-defaultTimeout = 5 # 시간 초과
-ticketClass = "rn-bb03" # 티켓 버튼 클래스명
+defaultTimeout = 5 # 暂停
+ticketClass = "rn-bb03" # 工单按钮类名
 
-options = webdriver.ChromeOptions() # 드라이버 설정
-options.add_argument("user-data-dir=" + chromeDirec) # 쓰던 크롬으로 열게 설정
-driver = webdriver.Chrome(options=options) # 크롬드라이버 사용
-driver.get(targetUrl) # 대상 URL로 이동
+options = webdriver.ChromeOptions() # 驱动程序设置
+options.add_argument("user-data-dir=" + chromeDirec) # 设置为使用您正在使用的 Chrome 打开
+driver = webdriver.Chrome(options=options) # 使用 chromedriver
+driver.get(targetUrl) # 转到目标 URL
 
-def waitUntilLoad(target, timeout = 5, refresh = False, by = By.CLASS_NAME): # 대상 로딩 대기 함수
+def waitUntilLoad(target, timeout = 5, refresh = False, by = By.CLASS_NAME): # 目标加载等待函数
     elem = False
     try:
-        print(target + "을 찾는 중..")
+        print(target + "寻找..")
         elem = WebDriverWait(driver, timeout).until(EC.presence_of_element_located((by, target)))
-        print(target + "을 찾음")
+        print(target + "成立")
     except TimeoutException:
         elem = False
         if refresh == True:
-            print("시간 초과, 새로고침 합니다..")
-            driver.refresh() # 타임아웃 시 새로고침
+            print("超时，正在刷新。。")
+            driver.refresh() # 超时刷新
             waitUntilLoad(target, timeout, refresh)
         else:
-            print("시간 초과")
+            print("暂停")
     finally:
         return elem
 
@@ -65,21 +65,21 @@ while True:
         if ticketButton:
             break
 
-ticket = waitUntilLoad(ticketClass) # 예약 버튼 
+ticket = waitUntilLoad(ticketClass) # 预订按钮
 if ticket:
-    print("예약 버튼 발견")
+    print("找到预订按钮")
     ticket.click()
-    print("예약 창 대기 중..")
+    print("等待预订窗口..")
     while len(driver.window_handles) <= 1:
         driver.implicitly_wait(1)
-    print("예약 창으로 이동합니다..")
-    driver.switch_to.window(driver.window_handles[1]) # 새 창으로 이동
-    print("예약 창으로 이동했습니다. " + driver.title)
+    print("前往预订窗口。")
+    driver.switch_to.window(driver.window_handles[1]) # 移至新窗口
+    print("您已进入预订窗口。 " + driver.title)
     
-    while len(driver.find_elements(By.TAG_NAME, "td")) < 35: # 날짜 모두 로딩 될 때 까지
+    while len(driver.find_elements(By.TAG_NAME, "td")) < 35: # 直到所有日期都加载完毕
         driver.implicitly_wait(0.1)
-    print("예약 날짜 로딩됨")
-    selects = driver.find_elements(By.CLASS_NAME, "select") # 예약 날짜 버튼
+    print("预订日期加载中")
+    selects = driver.find_elements(By.CLASS_NAME, "select") # 预订日期按钮
 
     # print(selects)
     foundSeat = False
@@ -87,8 +87,8 @@ if ticket:
     seatSelectBtn = waitUntilLoad(target="btnSeatSelect", by=By.ID)
     seatTiming = waitUntilLoad(target="ulTime", by=By.ID)
     if len(selects) > 0:
-        print("예약 가능한 날짜가 있습니다.")
-        for select in selects: # 모든 가능한 날짜 조회
+        print("有可预订的日期。")
+        for select in selects: # 查看所有可用日期
             targetClass = False
 
             link = select.find_element(By.TAG_NAME, "a")
@@ -100,82 +100,82 @@ if ticket:
                         break
 
                 if datePossible == True:
-                    print(link.text + "일 예약 가능")
+                    print(link.text + "可预订一日")
                     select.click()
-                    while len(seatTiming.find_elements(By.TAG_NAME, "li")) < 1: # 시간대 나타날 때까지 대기
+                    while len(seatTiming.find_elements(By.TAG_NAME, "li")) < 1: # 等到时区出现
                         driver.implicitly_wait(0.1)
 
                     for timing in seatTiming.find_elements(By.TAG_NAME, "li"):
-                        print(timing.text + " 조회중..")
-                        timing.click() # 시간대 선택
+                        print(timing.text + " 正在搜索..")
+                        timing.click() # 选择时区
                         time.sleep(0.5)
-                        while len(seatSpace.find_elements(By.TAG_NAME, "li")) < 1: # 좌석 등급 나타날 때까지 대기
+                        while len(seatSpace.find_elements(By.TAG_NAME, "li")) < 1: # 等待直到出现您的座位等级
                             driver.implicitly_wait(0.1)
                         
-                        # 예약 대상 좌석이 존재하는지 미리 확인
-                        print("좌석 등급 대상 {}개".format(len(targetSeats)))
-                        for seatClass in targetSeats: # 대상 좌석을 모두 조회
+                        # 提前查看是否有可预订的座位
+                        print("座位等级目标{}".format(len(targetSeats)))
+                        for seatClass in targetSeats: # 查看所有目标席位
                             for seat in seatSpace.find_elements(By.TAG_NAME, "li"):
                                 # WebDriverWait(driver, defaultTimeout).until(EC.presence_of_element_located((By.TAG_NAME, "strong")))
                                 currentClass = seat.find_element(By.TAG_NAME, "strong").text
-                                seatText = seat.find_element(By.TAG_NAME, "span") # 현재 좌석수
+                                seatText = seat.find_element(By.TAG_NAME, "span") # 当前座位容量
                                 current = seatText.text.split("석")[0]
-                                # print("대상:" + seatClass + " 조회-" + currentClass + " " + current + "석")
-                                if seatClass == currentClass: # 좌석이 남아있고 대상인 좌석인지 확인
-                                # if current != "0" and seatClass == currentClass: # 좌석이 남아있고 대상인 좌석인지 확인
-                                    print(seatClass + " 현재 {}석 남았습니다.".format(current))
-                                    targetClass = seatClass # 예매할 좌석을 미리 선택
+                                # print("目标:" + seatClass + "查看-" + currentClass + " " + current + "석")
+                                if seatClass == currentClass: # 检查是否有空位以及是否是目标座位
+                                # if current != "0" and seatClass == currentClass: # 检查是否有空位以及是否是目标座位
+                                    print(seatClass + " 今天 {}석 남았습니다.".format(current))
+                                    targetClass = seatClass # 提前选择座位
                                     break
 
-                        # 예약 대상인 좌석이 존재한다면 좌석 선택 시작
+                        # 如果有可预订的座位，开始选择座位
                         if targetClass != False:
-                            print(targetClass + " 등급으로 구역을 선택합니다..")
-                            seatSelectBtn.click() # 좌석선택 버튼 클릭
+                            print(targetClass + " 按等级选择区域。")
+                            seatSelectBtn.click() # 点击座位选择按钮
                             iframe = waitUntilLoad(target="ifrmSeatFrame", by=By.NAME)
                             time.sleep(1)
-                            driver.switch_to.frame(iframe) # 예매 iframe으로 이동
-                            seatPosList = waitUntilLoad(target="ulLegend", by=By.ID) # 좌석 등급 별 좌석 목록
-                            seatSelected = waitUntilLoad(target="liSelSeat", by=By.ID) # 선택된 좌석 목록
-                            booking = waitUntilLoad(target="booking") # 선택 완료 버튼
-                            while len(seatPosList.find_elements(By.TAG_NAME, "div")) < 1: # 좌석 등급 대기
+                            driver.switch_to.frame(iframe) # 前往预订 iframe
+                            seatPosList = waitUntilLoad(target="ulLegend", by=By.ID) # 按座位等级划分的座位列表
+                            seatSelected = waitUntilLoad(target="liSelSeat", by=By.ID) # 已选座位列表
+                            booking = waitUntilLoad(target="booking") # 选择完成按钮
+                            while len(seatPosList.find_elements(By.TAG_NAME, "div")) < 1: # 座位等级等候
                                 driver.implicitly_wait(0.1)
-                            for seat in seatPosList.find_elements(By.TAG_NAME, "div"): # 오른쪽 좌석 등급 리스트를 열어 조회
-                                print(seat.find_element(By.TAG_NAME, "p").text.split(" ")[0] + " 조회 중..")
-                                if seat.find_element(By.TAG_NAME, "p").text.split(" ")[0] == targetClass: # 조회 중인 좌석 등급이 맞다면
-                                    seat.click() # 해당 좌석 등급을 선택
-                                    seatLayer = waitUntilLoad(target="seat_layer") # 좌석 구역 ul 로드
-                                    while len(seatLayer.find_elements(By.TAG_NAME, "li")) < 1: # 좌석 구역 리스트 대기
+                            for seat in seatPosList.find_elements(By.TAG_NAME, "div"): # 打开右侧的座位等级列表即可查看
+                                print(seat.find_element(By.TAG_NAME, "p").text.split(" ")[0] + " 正在搜索..")
+                                if seat.find_element(By.TAG_NAME, "p").text.split(" ")[0] == targetClass: # 如果您要查找的座位等级正确
+                                    seat.click() # 选择合适的座位等级
+                                    seatLayer = waitUntilLoad(target="seat_layer") # 座位区 UL 路
+                                    while len(seatLayer.find_elements(By.TAG_NAME, "li")) < 1: # 座位区列表等候
                                         driver.implicitly_wait(0.1)
-                                    print("좌석 구역 리스트 로드됨")
-                                    seatAreaList = seatLayer.find_elements(By.TAG_NAME, "li") # 해당 등급의 좌석 구역 리스트
-                                    for seatArea in seatAreaList: # 좌석 구역 모두 조회
-                                        areaCurrent = seatArea.text.split("(")[1].split("석")[0] # 해당 구역의 좌석 수
-                                        if areaCurrent != "0": # 해당 구역에 좌석이 있다면
-                                            print(seatArea.text + " 선택됨")
-                                            seatArea.click() # 해당 구역 버튼을 클릭
+                                    print("座位区列表已加载")
+                                    seatAreaList = seatLayer.find_elements(By.TAG_NAME, "li") # 该舱位座位列表
+                                    for seatArea in seatAreaList: # 查看所有座位区
+                                        areaCurrent = seatArea.text.split("(")[1].split("석")[0] # 该区域席位数量
+                                        if areaCurrent != "0": # 如果该区域有座位
+                                            print(seatArea.text + " 选定")
+                                            seatArea.click() # 单击该区域的按钮
 
-                                            # 구역 좌석 리스트 창으로 넘어간 뒤 예약까지 하기
-                                            seatList = waitUntilLoad(target="divSeatArray", by=By.ID) # 좌석 위치 리스트
-                                            while len(seatList.find_elements(By.TAG_NAME, "div")) < 1: # 좌석 위치 리스트 대기
+                                            # 前往区域座位列表窗口进行预订
+                                            seatList = waitUntilLoad(target="divSeatArray", by=By.ID) # 座位位置列表
+                                            while len(seatList.find_elements(By.TAG_NAME, "div")) < 1: # 座位位置列表等候
                                                 driver.implicitly_wait(0.1)
                                             for seatPos in seatList.find_elements(By.TAG_NAME, "div"):
                                                 seatTitle = seatPos.get_attribute("title")
                                                 if len(seatTitle) != 0:
-                                                    seatPos.click() # 해당 좌석 위치 클릭
+                                                    seatPos.click() # 点击座位位置
                                                     driver.implicitly_wait(0.1)
                                                     selected = seatSelected.find_elements(By.TAG_NAME, "p")
                                                     if len(selected) > 0:
-                                                        print(seatTitle + " 선택됨")
-                                                        booking.click() # 좌석 선택 버튼 클릭
+                                                        print(seatTitle + " 选定")
+                                                        booking.click() # 点击座位选择按钮
                                                         foundSeat = True
                                                         break
 
                                             if foundSeat == True:
                                                 break
-                                    print("좌석 조회 완료")
-                                    break # 좌석을 조회했으니 탈출
+                                    print("座位搜索完成")
+                                    break # 我检查了座位，所以我退出了
                         else:
-                            print("대상 등급인 좌석이 없습니다. 다음 날짜로 이동합니다.")
+                            print("您目标班级已无空位。请移至下一日期。.")
 
                         if foundSeat == True:
                             break
@@ -183,10 +183,10 @@ if ticket:
                         break
                 
         if foundSeat == True:
-            print("좌석을 선택했습니다. 결제하세요.")
+            print("您已选择座位。请付款。.")
             while True:
                 time.sleep(600)
     else:
-        print("예약 가능한 날짜가 없습니다..")
+        print("没有可用的日期。")
 else:
-    print("예약 버튼을 찾지 못했습니다..")
+    print("找不到预订按钮。")
